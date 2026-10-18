@@ -1,63 +1,58 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
-   Name = "Script By Deltero Eder",
-   LoadingTitle = "Snap Menu V3",
-   LoadingSubtitle = "by Deltero Eder",
+   Name = "Script By Deltero Eder V4",
+   LoadingTitle = "Mod Menu Completo",
+   LoadingSubtitle = "by @deltero5 & eder_x_x1",
    ConfigurationSaving = { Enabled = false }
 })
 
 local MainTab = Window:CreateTab("Main", 4483362458)
 local ExtraTab = Window:CreateTab("Extras", 4483362458)
+local VisualTab = Window:CreateTab("Visual", 4483362458)
 local CredTab = Window:CreateTab("Creadores", 4483362458)
 
-local sv,dw,s2,s1,noclip,sjump=false,false,false,false,false,false
 local P=game.Players.LocalPlayer
+local sv,dw,s2,s1,noclip,sjump,espOn=false,false,false,false,false,false,false
+local flying=false
+local flySpeed=50
 
--- CREADORES OFICIALES
-CredTab:CreateParagraph({Title="CREADORES OFICIALES", Content="Este script es oficial de Deltero y Eder"})
+-- CREADORES
+CredTab:CreateParagraph({Title="CREADORES OFICIALES", Content="Script oficial de Deltero y Eder"})
 CredTab:CreateLabel("TikTok: @deltero5")
 CredTab:CreateLabel("TikTok: eder_x_x1")
-CredTab:CreateButton({
-   Name = "Copiar @deltero5",
-   Callback = function() setclipboard("@deltero5") Rayfield:Notify({Title="Copiado",Content="@deltero5 copiado",Duration=2}) end,
-})
-CredTab:CreateButton({
-   Name = "Copiar eder_x_x1",
-   Callback = function() setclipboard("eder_x_x1") Rayfield:Notify({Title="Copiado",Content="eder_x_x1 copiado",Duration=2}) end,
-})
 
 -- MAIN
-MainTab:CreateButton({
-   Name = "SNAP ABAJO / ARRIBA",
-   Callback = function()
-   local h=P.Character and P.Character:FindFirstChild("HumanoidRootPart")
-   if not h then return end
-   if not dw then sv=h.CFrame h.CFrame=CFrame.new(h.Position-Vector3.new(0,35,0)) dw=true
-   else h.CFrame=sv dw=false end
-   end,
-})
-MainTab:CreateToggle({Name="AIMBOT (No pared)", CurrentValue=false, Callback=function(v) s2=v end,})
+MainTab:CreateButton({Name="SNAP ABAJO / ARRIBA", Callback=function()
+local h=P.Character and P.Character:FindFirstChild("HumanoidRootPart")
+if not h then return end
+if not dw then sv=h.CFrame h.CFrame=CFrame.new(h.Position-Vector3.new(0,35,0)) dw=true else h.CFrame=sv dw=false end
+end,})
+MainTab:CreateToggle({Name="AIMBOT (No traspasa pared)", CurrentValue=false, Callback=function(v) s2=v end,})
 MainTab:CreateToggle({Name="SPEED HACK", CurrentValue=false, Callback=function(v) s1=v end,})
 
 -- EXTRAS
 ExtraTab:CreateToggle({Name="NOCLIP", CurrentValue=false, Callback=function(v) noclip=v end,})
 ExtraTab:CreateToggle({Name="SUPER JUMP", CurrentValue=false, Callback=function(v) sjump=v if P.Character and P.Character:FindFirstChild("Humanoid") then P.Character.Humanoid.JumpPower= v and 120 or 50 end end,})
-ExtraTab:CreateToggle({Name="HITBOX EXPANDER", CurrentValue=false, Callback=function(v) for _,plr in pairs(game.Players:GetPlayers()) do if plr~=P and plr.Character and plr.Character:FindFirstChild("Head") then if v then plr.Character.Head.Size=Vector3.new(10,10,10) plr.Character.Head.Transparency=0.5 else plr.Character.Head.Size=Vector3.new(2,1,1) plr.Character.Head.Transparency=0 end end end end,})
+ExtraTab:CreateToggle({Name="HITBOX EXPANDER", CurrentValue=false, Callback=function(v) for _,plr in pairs(game.Players:GetPlayers()) do if plr~=P and plr.Character and plr.Character:FindFirstChild("Head") then plr.Character.Head.Size= v and Vector3.new(10,10,10) or Vector3.new(2,1,1) plr.Character.Head.Transparency= v and 0.5 or 0 end end end end,})
 
-game:GetService("RunService").Stepped:Connect(function()
-if noclip and P.Character then for _,v in pairs(P.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide=false end end end
-end)
-
-game:GetService("RunService").RenderStepped:Connect(function()
-local cam=workspace.CurrentCamera local hrp=P.Character and P.Character:FindFirstChild("HumanoidRootPart") local hum=P.Character and P.Character:FindFirstChild("Humanoid")
-if s1 and hrp and hum and hum.MoveDirection.Magnitude>0 then hrp.CFrame=hrp.CFrame+hum.MoveDirection*0.35 end
-if s2 then
-local t,d=nil,400 local params=RaycastParams.new() params.FilterType=Enum.RaycastFilterType.Blacklist params.FilterDescendantsInstances={P.Character}
-for _,v in pairs(game.Players:GetPlayers()) do
-if v~=P and v.Character and v.Character:FindFirstChild("Head") and v.Character.Humanoid.Health>0 then
-local p,o=cam:WorldToViewportPoint(v.Character.Head.Position)
-if o then local m=(Vector2.new(p.X,p.Y)-Vector2.new(cam.ViewportSize.X/2,cam.ViewportSize.Y/2)).Magnitude if m<d then local ray=workspace:Raycast(cam.CFrame.Position, v.Character.Head.Position - cam.CFrame.Position, params) if not ray or ray.Instance:IsDescendantOf(v.Character) then d=m t=v end end end
-end end
-if t then cam.CFrame=CFrame.new(cam.CFrame.Position,t.Character.Head.Position) end
+ExtraTab:CreateToggle({Name="FLY (Vuela WASD+Espacio)", CurrentValue=false, Callback=function(v)
+local hrp=P.Character and P.Character:FindFirstChild("HumanoidRootPart")
+if not hrp then return end
+if v then
+flying=true
+local bv=Instance.new("BodyVelocity",hrp) bv.Name="FlyVel" bv.Velocity=Vector3.new(0,0,0) bv.MaxForce=Vector3.new(9e9,9e9,9e9)
+local bg=Instance.new("BodyGyro",hrp) bg.Name="FlyGyro" bg.MaxTorque=Vector3.new(9e9,9e9,9e9) bg.CFrame=hrp.CFrame
+task.spawn(function() while flying and hrp.Parent do local cam=workspace.CurrentCamera local move=Vector3.new(0,0,0) local hum=P.Character and P.Character:FindFirstChild("Humanoid") if hum then if hum.MoveDirection.Magnitude>0 then move=move+cam.CFrame:VectorToWorldSpace(hum.MoveDirection*flySpeed) end if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.Space) then move=move+Vector3.new(0,flySpeed,0) end if game:GetService("UserInputService"):IsKeyDown(Enum.KeyCode.LeftShift) then move=move-Vector3.new(0,flySpeed,0) end end hrp:FindFirstChild("FlyVel").Velocity=move hrp:FindFirstChild("FlyGyro").CFrame=cam.CFrame task.wait() end end)
+else
+flying=false if hrp:FindFirstChild("FlyVel") then hrp:FindFirstChild("FlyVel"):Destroy() end if hrp:FindFirstChild("FlyGyro") then hrp:FindFirstChild("FlyGyro"):Destroy() end
 end
-end)
+end,})
+
+-- VISUAL
+VisualTab:CreateToggle({Name="ESP", CurrentValue=false, Callback=function(v) espOn=v for _,plr in pairs(game.Players:GetPlayers()) do if plr~=P and plr.Character then if v then if not plr.Character:FindFirstChild("ESP_HL") then local hl=Instance.new("Highlight",plr.Character) hl.Name="ESP_HL" hl.FillColor=Color3.fromRGB(255,0,0) hl.OutlineColor=Color3.fromRGB(255,255,255) hl.FillTransparency=0.5 end else if plr.Character:FindFirstChild("ESP_HL") then plr.Character:FindFirstChild("ESP_HL"):Destroy() end end end end end,})
+
+local selectedPlayer=nil
+local list={}
+for _,plr in pairs(game.Players:GetPlayers()) do if plr~=P then table.insert(list,plr.Name) end end
+VisualTab:CreateDropdown({Name="Elegir jugador para espectear", Options=list, CurrentOption=nil, Callback=function(opt) selectedPlayer=opt end,})
+VisualTab:CreateButton({Name="ESPECTEAR", Callback=function() if selectedPlayer and game.Players:FindFirstChild(selectedPlayer) then local t=game.Players:FindFirstChild(selectedPlayer) if t.Character and t.Character:FindFirstChild("Humanoid")
